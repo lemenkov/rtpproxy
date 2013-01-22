@@ -6,7 +6,6 @@
 # description: A symmetric RTP proxy
 #
 # processname: rtpproxy
-# pidfile: /var/run/rtpproxy.pid
 
 ### BEGIN INIT INFO
 # Provides: rtpproxy
@@ -24,7 +23,6 @@
 prog=rtpproxy
 rtpproxy=/usr/bin/$prog
 
-user=rtpproxy
 lockfile=/var/lock/subsys/$prog
 pidfile=/var/run/$prog.pid
 
@@ -37,29 +35,29 @@ OPTIONS=
 RETVAL=0
 
 start() {
-        echo -n $"Starting $prog: "
+	echo -n $"Starting $prog: "
 
-        # check whether rtpproxy was already started
-        if pidofproc -p $pidfile > /dev/null 2>&1 ; then
-                echo -n "already running" && warning && echo
-	        return 0
-        fi
+	# check whether rtpproxy was already started
+	if pidofproc -p $pidfile > /dev/null 2>&1 ; then
+		echo -n "already running" && warning && echo
+		return 0
+	fi
 
-        daemon $rtpproxy -p $pidfile -u $user $OPTIONS
-        RETVAL=$?
-        echo
-        [ $RETVAL = 0 ] && touch $lockfile
-        return $RETVAL
+	daemon $rtpproxy -p $pidfile -u rtpproxy $OPTIONS
+	RETVAL=$?
+	echo
+	[ $RETVAL = 0 ] && touch $lockfile
+	return $RETVAL
 }
 
 stop() {
 	echo -n $"Stopping $prog: "
 
-        # check whether rtpproxy was already started
-        if ! pidofproc -p $pidfile > /dev/null 2>&1 ; then
-                echo -n "not running" && warning && echo
-                return 0
-        fi
+	# check whether rtpproxy was already started
+	if ! pidofproc -p $pidfile > /dev/null 2>&1 ; then
+		echo -n "not running" && warning && echo
+		return 0
+	fi
 
 	killproc -p $pidfile $prog
 	RETVAL=$?
@@ -70,33 +68,33 @@ stop() {
 
 # See how we were called.
 case "$1" in
-  start)
-	start
-	;;
-  stop)
-	stop
-	;;
-  status)
-	status -p $pidfile $prog
-	RETVAL=$?
-	;;
-  restart|force-reload)
-	stop
-	start
-	;;
-  condrestart|try-restart)
-	if [ -f $pidfile ] ; then
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status -p $pidfile $prog
+		RETVAL=$?
+		;;
+	restart|force-reload)
 		stop
 		start
-	fi
-	;;
-  reload)
-	echo -n $"Reloading $prog: not supported" && failure && echo
-	RETVAL=3
-	;;
-  *)
-	echo $"Usage: $prog {start|stop|restart|condrestart|reload|status|help}"
-	RETVAL=2
+		;;
+	reload)
+		echo -n $"Reloading $prog: not supported" && failure && echo
+		RETVAL=3
+		;;
+	condrestart|try-restart)
+		if [ -f $pidfile ] ; then
+			stop
+			start
+		fi
+		;;
+	*)
+		echo $"Usage: $prog {start|stop|restart|condrestart|status|help}"
+		RETVAL=2
 esac
 
 exit $RETVAL
